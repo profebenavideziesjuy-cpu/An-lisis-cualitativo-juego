@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnalizaLab - Análisis Cualitativo y Teoría Fundamentada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .drag-over {
+            border-color: #38bdf8 !important;
+            background-color: rgba(56, 189, 248, 0.15) !important;
+            transform: scale(1.02);
+        }
+        .card-selected {
+            ring: 4px;
+            ring-color: #38bdf8;
+            transform: translateY(-4px);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans select-none overflow-x-hidden">
+
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-teal-600 rounded-xl shadow-lg shadow-teal-500/30 text-white">
+                    <i class="fa-solid fa-microscope text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">AnalizaLab</h1>
+                    <p class="text-xs text-slate-400">Entrenamiento en Teoría Fundamentada (Grounded Theory)</p>
+                </div>
+            </div>
+
+            <!-- Global Game Status -->
+        <div class="flex items-center space-x-6 text-sm">
+            <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <span class="text-slate-400">Puntaje:</span>
+                <span id="score-display" class="font-bold text-amber-400">0</span>
+            </div>
+            <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                <i class="fa-solid fa-bullseye text-emerald-400"></i>
+                <span class="text-slate-400">Aciertos:</span>
+                <span id="hits-display" class="font-bold text-emerald-400">0/0</span>
+            </div>
+            <button onclick="showInstructions()" class="text-slate-400 hover:text-white transition-colors p-2" title="Jerarquía de Análisis">
+                <i class="fa-solid fa-sitemap text-lg"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+
+    <!-- Level Selection Tabs (Hierarchical Levels) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <button id="btn-lvl-1" onclick="loadLevel(1)" class="lvl-btn p-4 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-800 text-left transition-all duration-200 relative overflow-hidden group">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Nivel 1</span>
+                <i id="lock-1" class="fa-solid fa-unlock text-emerald-400 text-xs"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-100 mt-1">Indicadores ➔ Temas</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Agrupa unidades empíricas mínimas</div>
+            <div id="bar-lvl-1" class="absolute bottom-0 left-0 h-1 bg-teal-500 transition-all duration-300 w-0"></div>
+        </button>
+
+        <button id="btn-lvl-2" onclick="loadLevel(2)" class="lvl-btn p-4 rounded-xl border border-slate-700/60 bg-slate-800/30 text-left opacity-60 cursor-not-allowed transition-all duration-200 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Nivel 2</span>
+                <i id="lock-2" class="fa-solid fa-lock text-slate-500 text-xs"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-100 mt-1">Temas ➔ Categorías</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Abstracción de patrones emergentes</div>
+            <div id="bar-lvl-2" class="absolute bottom-0 left-0 h-1 bg-cyan-500 transition-all duration-300 w-0"></div>
+        </button>
+
+        <button id="btn-lvl-3" onclick="loadLevel(3)" class="lvl-btn p-4 rounded-xl border border-slate-700/60 bg-slate-800/30 text-left opacity-60 cursor-not-allowed transition-all duration-200 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Nivel 3</span>
+                <i id="lock-3" class="fa-solid fa-lock text-slate-500 text-xs"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-100 mt-1">Categorías ➔ Metacategorías</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Vinculación de dimensiones complejas</div>
+            <div id="bar-lvl-3" class="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-300 w-0"></div>
+        </button>
+
+        <button id="btn-lvl-4" onclick="loadLevel(4)" class="lvl-btn p-4 rounded-xl border border-slate-700/60 bg-slate-800/30 text-left opacity-60 cursor-not-allowed transition-all duration-200 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-purple-400">Nivel 4</span>
+                <i id="lock-4" class="fa-solid fa-lock text-slate-500 text-xs"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-100 mt-1">Metacategorías ➔ Conceptos</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Construcción Teórica General</div>
+            <div id="bar-lvl-4" class="absolute bottom-0 left-0 h-1 bg-purple-500 transition-all duration-300 w-0"></div>
+        </button>
+    </div>
+
+    <!-- Level Objective Banner -->
+    <div class="bg-teal-950/40 border border-teal-500/30 rounded-xl p-4 flex items-start gap-3 text-slate-300">
+        <i class="fa-solid fa-diagram-project text-teal-400 text-lg mt-0.5"></i>
+        <div>
+            <h2 id="level-title" class="font-semibold text-slate-100 text-sm">Cargando nivel...</h2>
+            <p id="level-desc" class="text-xs text-slate-400 mt-0.5">Clasifica las unidades según la escala jerárquica de abstracción cualitativa (Indicador ➔ Tema ➔ Categoría ➔ Metacategoría ➔ Concepto).</p>
+        </div>
+    </div>
+
+    <!-- GAMEPLAY WORKSPACE -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 items-start">
+
+            <!-- Source Items Tray -->
+            <div class="lg:col-span-1 bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4 flex flex-col gap-3 min-h-[380px] shadow-inner">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-700/50">
+                    <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-teal-400"></i> Unidades de Análisis
+                    </h3>
+                    <span id="remaining-count" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-semibold">0</span>
+                </div>
+                
+                <p class="text-[11px] text-slate-400 italic">Haz clic en una unidad para seleccionarla o arrástrala hacia la categoría conceptual adecuada.</p>
+
+                <!-- Dynamic Item Containers -->
+                <div id="source-tray" class="flex flex-col gap-2.5 overflow-y-auto max-h-[520px] p-1">
+                    <!-- Cards will be dynamically injected here -->
+                </div>
+            </div>
+
+            <!-- Target Category Boxes -->
+            <div id="target-boxes-container" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
+                <!-- Target Category Columns dynamically inserted here -->
+            </div>
+
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 max-w-md bg-slate-800 border border-slate-700 text-slate-100 p-4 rounded-xl shadow-2xl flex items-center gap-3">
+        <div id="toast-icon" class="text-2xl"></div>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm"></h4>
+            <p id="toast-message" class="text-xs text-slate-300 mt-0.5 leading-relaxed"></p>
+        </div>
+    </div>
+
+    <!-- Methodological Guide Modal -->
+    <div id="instructions-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-teal-400"></i> Teoría Fundamentada (Grounded Theory)
+                </h3>
+                <button onclick="hideInstructions()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="text-sm text-slate-300 space-y-3 leading-relaxed">
+                <p>La **Teoría Fundamentada** es una metodología cualitativa que busca generar teoría sustantiva a partir del análisis sistemático y comparativo de datos empíricos (entrevistas, testimonios, observación).</p>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-2 text-xs">
+                    <p><strong class="text-teal-400">1. Codificación Abierta:</strong> Se comparan incidentes y citas textuales para asignar nombres conceptuales (códigos descriptivos) según semejanzas y diferencias.</p>
+                    <p><strong class="text-cyan-400">2. Codificación Axial:</strong> Se vinculan los códigos agrupándolos en ejes relacionales: *Condiciones Causal/Contextuales*, *Estrategias de Acción/Interacción* y *Consecuencias/Impactos*.</p>
+                    <p><strong class="text-indigo-400">3. Codificación Selectiva:</strong> Se integran y refinan las categorías en torno a una *Categoría Núcleo (Core Category)* que explica el fenómeno principal estudiado.</p>
+                </div>
+            </div>
+            <button onclick="hideInstructions()" class="w-full bg-teal-600 hover:bg-teal-500 font-semibold text-white py-2.5 rounded-xl transition-colors text-sm">¡Comprender e Iniciar Análisis!</button>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl text-center flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-3xl animate-bounce">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-100">¡Fase Completada!</h3>
+            <p id="victory-text" class="text-sm text-slate-300">Has demostrado capacidad para estructurar y clasificar adecuadamente las unidades analíticas.</p>
+            
+            <div class="bg-slate-800/80 w-full p-4 rounded-xl border border-slate-700/60 my-2 text-left space-y-2 text-xs">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Puntaje Final:</span>
+                    <span id="final-score" class="font-bold text-amber-400">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Precisión Analítica:</span>
+                    <span id="final-accuracy" class="font-bold text-emerald-400">100%</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="restartLevel()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-slate-700">Reintentar</button>
+                <button id="next-lvl-btn" onclick="nextLevel()" class="flex-1 bg-teal-600 hover:bg-teal-500 text-white py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-teal-600/30">Siguiente Nivel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodological Guide Modal -->
+    <div id="instructions-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-teal-400"></i> Jerarquía de Análisis Cualitativo
+                </h3>
+                <button onclick="hideInstructions()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="text-sm text-slate-300 space-y-3 leading-relaxed">
+                <p>En la Teoría Fundamentada y el análisis cualitativo, las unidades se organizan en niveles crecientes de abstracción para transitar del dato empírico a la teoría formal:</p>
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-2 text-xs">
+                    <p><strong class="text-amber-400">1. Indicador:</strong> Unidad empírica mínima (citas textuales, fragmentos de entrevista, notas de campo).</p>
+                    <p><strong class="text-teal-400">2. Tema:</strong> Agrupación de indicadores empíricos afines con recurrencia temática.</p>
+                    <p><strong class="text-cyan-400">3. Categoría:</strong> Concepto analítico derivado de la abstracción sistemática de múltiples temas.</p>
+                    <p><strong class="text-indigo-400">4. Metacategoría:</strong> Dimensión analítica superior que vincula y articula varias categorías relacionales.</p>
+                    <p><strong class="text-purple-400">5. Concepto Teórico:</strong> La unidad de abstracción más general que integra el modelo explicativo teórico.</p>
+                </div>
+            </div>
+            <button onclick="hideInstructions()" class="w-full bg-teal-600 hover:bg-teal-500 font-semibold text-white py-2.5 rounded-xl transition-colors text-sm">¡Comprendido!</button>
+        </div>
+    </div>
+
+    <script>
+        // Database of qualitative social science levels following the strict hierarchy:
+        // Indicador -> Tema -> Categoría -> Metacategoría -> Concepto Teórico
+        const gameData = {
+            1: {
+                title: "Nivel 1: Clasificación de Indicadores Empíricos en Temas",
+                desc: "Ubica cada Indicador Empírico (unidad mínima empírica de entrevistas) en su Tema emergente correspondiente.",
+                categories: [
+                    { id: "agotamiento", name: "Tema: Desgaste Psicofísico Laboral", icon: "fa-battery-quarter", color: "rose" },
+                    { id: "redes_apoyo", name: "Tema: Estrategias de Apoyo Comunitario", icon: "fa-handshake-angle", color: "emerald" },
+                    { id: "barrera_tech", name: "Tema: Barreras de Infraestructura Digital", icon: "fa-wifi", color: "amber" }
+                ],
+                items: [
+                    { id: "ind1", name: "Indicador #101", category: "agotamiento", icon: "fa-quote-left", quote: "«Paso 14 horas seguidas trabajando en la computadora y el dolor cervical no me deja dormir.»", desc: "Indicador empírico sobre desgaste físico corporal derivado del trabajo." },
+                    { id: "ind2", name: "Indicador #102", category: "redes_apoyo", icon: "fa-quote-left", quote: "«Con las vecinas armamos una red de rotación para cuidar los niños mientras salimos a trabajar.»", desc: "Indicador empírico sobre solidaridad interpersonal y cuidados comunitarios." },
+                    { id: "ind3", name: "Indicador #103", category: "barrera_tech", icon: "fa-quote-left", quote: "«En mi zona la señal de celular cae siempre a mediodía y no podemos entregar los trabajos.»", desc: "Indicador empírico sobre deficiencia de conectividad e infraestructura tecnológica." },
+                    { id: "ind4", name: "Indicador #104", category: "agotamiento", icon: "fa-quote-left", quote: "«Me dan ataques de ansiedad los domingos por la noche de solo pensar en la carga horaria.»", desc: "Indicador de malestar emocional e insomnio por carga laboral." },
+                    { id: "ind5", name: "Indicador #105", category: "redes_apoyo", icon: "fa-quote-left", quote: "«Compartimos las herramientas de trabajo entre 4 familias para no gastar en alquiler.»", desc: "Indicador empírico de cooperación y compartición de medios de producción." },
+                    { id: "ind6", name: "Indicador #106", category: "barrera_tech", icon: "fa-quote-left", quote: "«Solo tenemos un dispositivo para cuatro hermanos, así que nos turnamos la escuela.»", desc: "Indicador empírico sobre escasez de equipamiento tecnológico familiar." }
+                ]
+            },
+            2: {
+                title: "Nivel 2: Abstracción de Temas hacia Categorías Analíticas",
+                desc: "Vincula los Temas emergentes para constituir Categorías analíticas cualitativas de mayor nivel sintético.",
+                categories: [
+                    { id: "cat_precarizacion", name: "Categoría: Precarización de las Condiciones de Vida", icon: "fa-triangle-exclamation", color: "rose" },
+                    { id: "cat_agencia", name: "Categoría: Agencia y Resistencia Popular", icon: "fa-person-circle-up", color: "emerald" },
+                    { id: "cat_exclusion", name: "Categoría: Brechas de Inclusión Institucional", icon: "fa-building-circle-xmark", color: "amber" }
+                ],
+                items: [
+                    { id: "t1", name: "Tema: Desgaste Psicofísico Laboral", category: "cat_precarizacion", icon: "fa-layer-group", desc: "Patrón temático de fatiga y somatización por sobrecarga." },
+                    { id: "t2", name: "Tema: Estrategias de Apoyo Comunitario", category: "cat_agencia", icon: "fa-layer-group", desc: "Agrupación de dinámicas cooperativas populares autónomas." },
+                    { id: "t3", name: "Tema: Barreras de Infraestructura Digital", category: "cat_exclusion", icon: "fa-layer-group", desc: "Patrón temático de desarticulación por falta de conectividad." },
+                    { id: "t4", name: "Tema: Inestabilidad de Ingresos Informales", category: "cat_precarizacion", icon: "fa-layer-group", desc: "Tema sobre fluctuación monetaria e incertidumbre habitacional." },
+                    { id: "t5", name: "Tema: Redes Colectivas de Autoabastecimiento", category: "cat_agencia", icon: "fa-layer-group", desc: "Tema centrado en dinámicas de autogestión de bienes básicos." },
+                    { id: "t6", name: "Tema: Burocratización del Acceso a Subsidios", category: "cat_exclusion", icon: "fa-layer-group", desc: "Tema sobre trabas administrativas del Estado en sectores vulnerables." }
+                ]
+            },
+            3: {
+                title: "Nivel 3: Articulación de Categorías en Metacategorías",
+                desc: "Conecta las Categorías analíticas dentro de Metacategorías estructurales / ejes multidimensionales.",
+                categories: [
+                    { id: "meta_condiciones", name: "Metacategoría: Determinantes Estructurales y Contexto", icon: "fa-cubes-stacked", color: "sky" },
+                    { id: "meta_estrategias", name: "Metacategoría: Dispositivos de Acción y Adaptación", icon: "fa-sliders", color: "indigo" },
+                    { id: "meta_impactos", name: "Metacategoría: Configuración del Malestar/Bienestar Subjetivo", icon: "fa-chart-area", color: "purple" }
+                ],
+                items: [
+                    { id: "c1", name: "Categoría: Precarización de Condiciones de Vida", category: "meta_condiciones", icon: "fa-folder-tree", desc: "Categoría analítica que actúa como marco de restricción estructural." },
+                    { id: "c2", name: "Categoría: Agencia y Resistencia Popular", category: "meta_estrategias", icon: "fa-folder-tree", desc: "Categoría analítica de respuesta directa frente a la vulnerabilidad." },
+                    { id: "c3", name: "Categoría: Desarticulación del Tejido Social", category: "meta_impactos", icon: "fa-folder-tree", desc: "Categoría sintética que expresa las secuelas socioafectivas." },
+                    { id: "c4", name: "Categoría: Brechas de Inclusión Institucional", category: "meta_condiciones", icon: "fa-folder-tree", desc: "Categoría relativa a la ausencias/fallos de cobertura estatal." },
+                    { id: "c5", name: "Categoría: Reconversión del Capital Simbólico", category: "meta_estrategias", icon: "fa-folder-tree", desc: "Categoría referida a tácticas de adaptación de habilidades." },
+                    { id: "c6", name: "Categoría: Vulnerabilidad Psicosocial Emergente", category: "meta_impactos", icon: "fa-folder-tree", desc: "Categoría sobre impactos subjetivos sostenidos en la salud mental." }
+                ]
+            },
+            4: {
+                title: "Nivel 4: Integración Teórica Final (Conceptos Teóricos)",
+                desc: "Sintetiza las Metacategorías en los Conceptos Teóricos Generales explicativos del modelo cualitativo.",
+                categories: [
+                    { id: "concepto_vulnerabilidad", name: "Concepto: «Vulnerabilidad Estructural Reticular»", icon: "fa-brain", color: "rose" },
+                    { id: "concepto_resiliencia", name: "Concepto: «Agencia Informal Colectiva»", icon: "fa-shield-halved", color: "emerald" },
+                    { id: "concepto_subjetividad", name: "Concepto: «Subjetividad Precarizada»", icon: "fa-infinity", color: "purple" }
+                ],
+                items: [
+                    { id: "m1", name: "Metacategoría: Determinantes Estructurales y Contexto", category: "concepto_vulnerabilidad", icon: "fa-diagram-successor", desc: "Integra las dinámicas macroeconómicas e institucionales que condicionan el fenómeno." },
+                    { id: "m2", name: "Metacategoría: Dispositivos de Acción y Adaptación", category: "concepto_resiliencia", icon: "fa-diagram-successor", desc: "Integra las praxeologías comunitarias de autonomía y soporte relacional." },
+                    { id: "m3", name: "Metacategoría: Configuración del Malestar Subjetivo", category: "concepto_subjetividad", icon: "fa-diagram-successor", desc: "Integra las vivencias psicoemocionales en el modelo teórico interpretativo." }
+                ]
+            }
+        };
+
+        let currentLevel = 1;
+        let unlockedLevel = 1;
+        let score = 0;
+        let totalHits = 0;
+        let currentLevelHits = 0;
+        let currentLevelTotal = 0;
+        let selectedItem = null;
+        let currentTrayItems = [];
+
+        window.onload = function() {
+            loadLevel(1);
+        };
+
+        function loadLevel(lvl) {
+            if (lvl > unlockedLevel) {
+                showToast("Nivel Bloqueado", "Debes completar la unidad de abstracción previa para avanzar en la jerarquía.", "fa-solid fa-lock text-amber-400");
+                return;
+            }
+
+            currentLevel = lvl;
+            const data = gameData[lvl];
+
+            // Update UI Level Header
+            document.getElementById('level-title').innerText = data.title;
+            document.getElementById('level-desc').innerText = data.desc;
+
+            // Update Level Tabs visual state
+            [1, 2, 3, 4].forEach(i => {
+                const btn = document.getElementById(`btn-lvl-${i}`);
+                const bar = document.getElementById(`bar-lvl-${i}`);
+                if (i === currentLevel) {
+                    btn.classList.add('bg-slate-800', 'border-teal-500/80', 'shadow-lg');
+                    btn.classList.remove('bg-slate-800/30', 'bg-slate-800/50');
+                    bar.style.width = '100%';
+                } else {
+                    btn.classList.remove('border-teal-500/80', 'shadow-lg');
+                    bar.style.width = '0%';
+                }
+            });
+
+            // Reset Level state
+            selectedItem = null;
+            currentLevelHits = 0;
+            currentTrayItems = [...data.items].sort(() => Math.random() - 0.5); // Shuffle
+            currentLevelTotal = currentTrayItems.length;
+
+            updateScoreDisplay();
+            renderTray();
+            renderTargetBoxes();
+        }
+
+        function renderTray() {
+            const tray = document.getElementById('source-tray');
+            const remCount = document.getElementById('remaining-count');
+            tray.innerHTML = '';
+            remCount.innerText = currentTrayItems.length;
+
+            if (currentTrayItems.length === 0) {
+                tray.innerHTML = `
+                    <div class="text-center py-8 text-slate-500 text-xs flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-2xl text-emerald-400"></i>
+                        <span>¡Unidades integradas con éxito!</span>
+                    </div>
+                `;
+                checkLevelCompletion();
+                return;
+            }
+
+            currentTrayItems.forEach(item => {
+                const card = document.createElement('div');
+                card.id = `card-${item.id}`;
+                card.draggable = true;
+                card.className = `p-3 rounded-xl bg-slate-700/60 hover:bg-slate-700 border border-slate-600/60 cursor-grab active:cursor-grabbing transition-all flex flex-col gap-1.5 shadow-sm group text-slate-200`;
+                
+                // Drag and Touch/Click handlers
+                card.ondragstart = (e) => handleDragStart(e, item);
+                card.onclick = () => selectItemClick(item, card);
+
+                let contentHtml = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${item.icon} text-teal-400 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-xs font-semibold text-slate-100">${item.name}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (item.quote) {
+                    contentHtml += `<p class="text-[11px] text-teal-200/90 italic bg-slate-800/50 p-2 rounded-lg border border-slate-700/50 leading-relaxed">${item.quote}</p>`;
+                } else if (item.desc) {
+                    contentHtml += `<p class="text-[11px] text-slate-400 leading-relaxed">${item.desc}</p>`;
+                }
+
+                card.innerHTML = contentHtml;
+                tray.appendChild(card);
+            });
+        }
+
+        function renderTargetBoxes() {
+            const container = document.getElementById('target-boxes-container');
+            container.innerHTML = '';
+
+            const categories = gameData[currentLevel].categories;
+
+            categories.forEach(cat => {
+                const box = document.createElement('div');
+                box.className = `bg-slate-800/40 border-2 border-dashed border-slate-700/80 rounded-2xl p-4 flex flex-col gap-3 min-h-[380px] transition-all relative overflow-hidden`;
+                box.id = `target-${cat.id}`;
+
+                // Drag Events
+                box.ondragover = (e) => {
+                    e.preventDefault();
+                    box.classList.add('drag-over');
+                };
+                box.ondragleave = () => box.classList.remove('drag-over');
+                box.ondrop = (e) => handleDrop(e, cat.id);
+
+                // Click handler for tap-to-place
+                box.onclick = (e) => {
+                    if (e.target.closest('.classified-card')) return;
+                    if (selectedItem) {
+                        evaluateClassification(selectedItem, cat.id);
+                    }
+                };
+
+                box.innerHTML = `
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-700/60">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${cat.icon} text-${cat.color}-400 text-lg"></i>
+                            <h4 class="font-bold text-slate-200 text-sm">${cat.name}</h4>
+                        </div>
+                        <span id="badge-${cat.id}" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">0</span>
+                    </div>
+
+                    <div id="drop-zone-${cat.id}" class="flex flex-col gap-2 flex-1 overflow-y-auto">
+                        <!-- Placed elements show up here -->
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        function handleDragStart(e, item) {
+            e.dataTransfer.setData("text/plain", JSON.stringify(item));
+            selectedItem = item;
+        }
+
+        function selectItemClick(item, cardEl) {
+            document.querySelectorAll('#source-tray > div').forEach(c => c.classList.remove('ring-2', 'ring-teal-400', 'bg-slate-700'));
+            if (selectedItem && selectedItem.id === item.id) {
+                selectedItem = null;
+            } else {
+                selectedItem = item;
+                cardEl.classList.add('ring-2', 'ring-teal-400', 'bg-slate-700');
+            }
+        }
+
+        function handleDrop(e, targetCategoryId) {
+            e.preventDefault();
+            const box = document.getElementById(`target-${targetCategoryId}`);
+            box.classList.remove('drag-over');
+
+            const itemData = e.dataTransfer.getData("text/plain");
+            if (!itemData) return;
+            const item = JSON.parse(itemData);
+
+            evaluateClassification(item, targetCategoryId);
+        }
+
+        function evaluateClassification(item, targetCategoryId) {
+            const isCorrect = item.category === targetCategoryId;
+
+            if (isCorrect) {
+                score += 100;
+                currentLevelHits++;
+                totalHits++;
+
+                showToast("¡Coherencia Jerárquica!", `La unidad "${item.name}" encaja perfectamente en este nivel de abstracción.`, "fa-solid fa-circle-check text-emerald-400");
+
+                currentTrayItems = currentTrayItems.filter(i => i.id !== item.id);
+                selectedItem = null;
+
+                const zone = document.getElementById(`drop-zone-${targetCategoryId}`);
+                const badge = document.getElementById(`badge-${targetCategoryId}`);
+
+                const placedCard = document.createElement('div');
+                placedCard.className = `classified-card p-2.5 rounded-xl bg-slate-800/90 border border-emerald-500/40 text-xs flex flex-col gap-1 text-slate-200 animate-fade-in`;
+                
+                let cardInner = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium text-emerald-300 flex items-center gap-1.5">
+                            <i class="fa-solid ${item.icon}"></i> ${item.name}
+                        </span>
+                        <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                    </div>
+                `;
+                if (item.quote) {
+                    cardInner += `<p class="text-[10px] text-slate-400 italic">${item.quote}</p>`;
+                }
+
+                placedCard.innerHTML = cardInner;
+                zone.appendChild(placedCard);
+
+                badge.innerText = parseInt(badge.innerText) + 1;
+
+                updateScoreDisplay();
+                renderTray();
+            } else {
+                score = Math.max(0, score - 25);
+                showToast("Incoherencia Metodológica", `"${item.name}" no corresponde a este nivel jerárquico. ${item.desc}`, "fa-solid fa-triangle-exclamation text-rose-400");
+                updateScoreDisplay();
+            }
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('hits-display').innerText = `${currentLevelHits}/${currentLevelTotal}`;
+        }
+
+        function checkLevelCompletion() {
+            if (currentLevelHits === currentLevelTotal) {
+                if (currentLevel < 4) {
+                    unlockedLevel = Math.max(unlockedLevel, currentLevel + 1);
+                    const nextLockIcon = document.getElementById(`lock-${currentLevel + 1}`);
+                    const nextBtn = document.getElementById(`btn-lvl-${currentLevel + 1}`);
+                    if (nextLockIcon) {
+                        nextLockIcon.className = "fa-solid fa-unlock text-emerald-400 text-xs";
+                    }
+                    if (nextBtn) {
+                        nextBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                        nextBtn.classList.add('hover:bg-slate-800');
+                    }
+                }
+
+                setTimeout(() => {
+                    document.getElementById('final-score').innerText = score;
+                    document.getElementById('final-accuracy').innerText = "100%";
+                    
+                    const nextBtn = document.getElementById('next-lvl-btn');
+                    if (currentLevel === 4) {
+                        document.getElementById('victory-text').innerText = "¡Felicitaciones! Has dominado el proceso completo de jerarquización analítica desde el Indicador Empírico hasta el Concepto Teórico.";
+                        nextBtn.innerText = "Finalizar Laboratorio";
+                        nextBtn.onclick = () => document.getElementById('victory-modal').classList.add('hidden');
+                    } else {
+                        document.getElementById('victory-text').innerText = "Has avanzado al siguiente peldaño de la jerarquía analítica con rigor teórico.";
+                        nextBtn.innerText = "Siguiente Nivel de Jerarquía";
+                        nextBtn.onclick = () => {
+                            document.getElementById('victory-modal').classList.add('hidden');
+                            loadLevel(currentLevel + 1);
+                        };
+                    }
+
+                    document.getElementById('victory-modal').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        function restartLevel() {
+            document.getElementById('victory-modal').classList.add('hidden');
+            loadLevel(currentLevel);
+        }
+
+        function nextLevel() {
+            document.getElementById('victory-modal').classList.add('hidden');
+            if (currentLevel < 4) loadLevel(currentLevel + 1);
+        }
+
+        function showToast(title, msg, iconClass) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastTitle.innerText = title;
+            toastMsg.innerText = msg;
+            toastIcon.innerHTML = `<i class="${iconClass}"></i>`;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        function showInstructions() {
+            document.getElementById('instructions-modal').classList.remove('hidden');
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructions-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
